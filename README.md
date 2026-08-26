@@ -215,7 +215,8 @@ can't find any. Point it at another deployment the same way:
 bluecore --bluecore-url https://bcld.info/ --username me search moon
 ```
 
-More usually, set these in your environment or a `.env` file:
+To avoid being prompted, set these in your environment, or in a `.env` file in
+the directory you're working in:
 
 | Variable | What it's for |
 |---|---|
@@ -225,6 +226,11 @@ More usually, set these in your environment or a `.env` file:
 | `API_URL` | The API directly, when it isn't at `BLUECORE_URL/api` |
 | `KEYCLOAK_EXTERNAL_URL` | Keycloak directly, when it isn't at `BLUECORE_URL/keycloak` |
 | `BLUECORE_TOKEN` | An access token, instead of logging in |
+
+Setting `API_KEYCLOAK_USER` and `API_KEYCLOAK_PASSWORD` is enough to stop the
+prompt appearing; `BLUECORE_TOKEN` skips the Keycloak login as well. A real
+environment variable takes precedence over a `.env` entry, and either can be
+overridden per command with `--username` and `--password`.
 
 These are the same names [Blue Core API] uses, so an existing `.env` works
 as-is. For a local development server, which serves the API at the bare root

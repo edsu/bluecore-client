@@ -66,6 +66,10 @@ class Settings:
                 # prompt and over what's being typed.
                 with ui.pause():
                     ui.note(f"Sign in to {resolved.api_url}")
+                    ui.note(
+                        "  Set API_KEYCLOAK_USER and API_KEYCLOAK_PASSWORD, or "
+                        "BLUECORE_TOKEN, to skip this."
+                    )
                     username = username or typer.prompt("Blue Core username")
                     password = password or typer.prompt(
                         "Blue Core password", hide_input=True

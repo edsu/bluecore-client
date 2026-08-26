@@ -1,5 +1,7 @@
 """Config resolution: arguments, then environment, then derived defaults."""
 
+from dotenv import load_dotenv as real_load_dotenv
+
 from bluecore_client import config
 
 
@@ -77,6 +79,51 @@ def test_token_url_matches_the_apis_own():
     assert resolved.token_url == (
         "https://bcld.info/keycloak/realms/bluecore/protocol/openid-connect/token"
     )
+
+
+class TestDotenvDiscovery:
+    """A .env has to be found where the user is working.
+
+    python-dotenv's find_dotenv() searches upward from the file that called it
+    by default -- this package, inside site-packages -- so without usecwd the
+    CLI never sees the .env sitting next to the user.
+    """
+
+    def resolve_in(self, monkeypatch, directory):
+        """Resolve with dotenv loading really enabled, from `directory`.
+
+        The suite-wide fixture stubs load_dotenv out, so the genuine function
+        has to be the one captured at import time -- by now the module
+        attribute is the stub.
+        """
+        monkeypatch.setattr(config.dotenv, "load_dotenv", real_load_dotenv)
+        monkeypatch.chdir(directory)
+        return config.resolve()
+
+    def test_a_dotenv_in_the_working_directory_is_read(self, monkeypatch, tmp_path):
+        (tmp_path / ".env").write_text(
+            "BLUECORE_URL=https://from-dotenv.example.org\n"
+            "API_KEYCLOAK_USER=dotenv-user\n"
+            "API_KEYCLOAK_PASSWORD=dotenv-pass\n"
+        )
+
+        resolved = self.resolve_in(monkeypatch, tmp_path)
+
+        assert resolved.api_url == "https://from-dotenv.example.org/api"
+        assert resolved.username == "dotenv-user"
+        assert resolved.has_credentials, "so a write command won't prompt"
+
+    def test_a_real_environment_variable_beats_the_dotenv(self, monkeypatch, tmp_path):
+        (tmp_path / ".env").write_text("API_KEYCLOAK_USER=dotenv-user\n")
+        monkeypatch.setenv("API_KEYCLOAK_USER", "real-env-user")
+
+        assert self.resolve_in(monkeypatch, tmp_path).username == "real-env-user"
+
+    def test_no_dotenv_is_not_an_error(self, monkeypatch, tmp_path):
+        resolved = self.resolve_in(monkeypatch, tmp_path)
+
+        assert resolved.api_url  # the default deployment
+        assert not resolved.has_credentials
 
 
 def test_client_id_defaults_to_the_one_the_api_expects():

@@ -78,7 +78,10 @@ def resolve(
     out of the box.
     """
     if load_dotenv:
-        dotenv.load_dotenv()
+        # usecwd=True matters. Without it python-dotenv searches upward from
+        # the file that called it -- this module, inside site-packages -- so a
+        # .env in the directory you are actually working in is never found.
+        dotenv.load_dotenv(dotenv.find_dotenv(usecwd=True))
 
     env = os.environ.get
 
