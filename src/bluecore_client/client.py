@@ -140,8 +140,18 @@ class BluecoreClient:
 
         try:
             body = self.request("GET", "/context.jsonld").json()
-            self._context = body.get("@context", body)
-        except BluecoreError:
+        except (BluecoreError, ValueError):
+            # ValueError covers a body that isn't JSON at all -- a deployment
+            # whose content negotiation falls through returns an HTML page.
+            self._context = None
+            return None
+
+        # A context can legally be an array or a string; neither is usable as
+        # an inline substitute, so fall back to letting rdflib resolve it.
+        if isinstance(body, dict):
+            term_map = body.get("@context", body)
+            self._context = term_map if isinstance(term_map, dict) else None
+        else:
             self._context = None
         return self._context
 

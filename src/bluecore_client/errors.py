@@ -17,10 +17,6 @@ class ConfigError(BluecoreError):
     """Something needed to reach Blue Core is missing or unusable."""
 
 
-class AuthError(BluecoreError):
-    """Keycloak refused the credentials, or the API refused the token."""
-
-
 class ConnectionFailed(BluecoreError):
     """The API could not be reached at all: refused, unresolved, or timed out."""
 
@@ -28,10 +24,25 @@ class ConnectionFailed(BluecoreError):
 class APIError(BluecoreError):
     """The API returned an unsuccessful status code."""
 
-    def __init__(self, message: str, *, status_code: int, response: httpx.Response):
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        response: httpx.Response | None = None,
+    ):
         super().__init__(message)
         self.status_code = status_code
         self.response = response
+
+
+class AuthError(APIError):
+    """Keycloak refused the credentials, or the API refused the token.
+
+    An :class:`APIError` so that ``except APIError`` covers a 401 alongside
+    every other failing status. ``status_code`` and ``response`` are unset when
+    the failure came from Keycloak rather than from the API.
+    """
 
 
 class NotFound(APIError):
@@ -53,9 +64,14 @@ def _detail(response: httpx.Response) -> str:
     dicts for a 422 from Pydantic validation, so both shapes are handled.
     """
     try:
-        detail = response.json().get("detail")
+        body = response.json()
     except ValueError:
-        detail = None
+        body = None
+
+    # A gateway or proxy can answer with a JSON array or string rather than the
+    # object FastAPI would send, and losing the real status to an AttributeError
+    # raised in here would be worse than saying nothing.
+    detail = body.get("detail") if isinstance(body, dict) else None
 
     if detail is None:
         return response.text.strip() or response.reason_phrase
@@ -93,7 +109,11 @@ def raise_for_status(response: httpx.Response) -> None:
             response=response,
         )
     if status == 401:
-        raise AuthError(f"{message} ({request.method} {request.url})")
+        raise AuthError(
+            f"{message} ({request.method} {request.url})",
+            status_code=status,
+            response=response,
+        )
     if status == 403:
         raise PermissionDenied(
             f"{message} ({request.method} {request.url})",

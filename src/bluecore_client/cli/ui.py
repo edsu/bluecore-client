@@ -181,7 +181,9 @@ def fields(data: dict[str, Any], *names: str) -> None:
     width = max((len(name) for name in names), default=0)
     for name in names:
         value = data.get(name, "")
-        out.print(f"[key]{name.rjust(width)}[/key]  {value}")
+        # Escaped for the same reason UriRecords escapes: bracketed values are
+        # routine in this domain, and rich would silently swallow them as markup.
+        out.print(f"[key]{name.rjust(width)}[/key]  {escape(str(value))}")
 
 
 def count(total: int | None, noun: str, plural: str | None = None) -> str:

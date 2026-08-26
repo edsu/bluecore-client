@@ -80,7 +80,12 @@ def list_activities(
     records = ui.UriRecords("WHEN")
 
     def emit(activity: dict) -> None:
-        resource = str((activity.get("object") or {}).get("id", ""))
+        # Activity Streams allows an object to be either a node or a bare IRI.
+        target = activity.get("object")
+        if isinstance(target, dict):
+            resource = str(target.get("id", ""))
+        else:
+            resource = str(target or "")
         when = str(activity.get("published", ""))
         what = str(activity.get("type", ""))
         records.add(resource, f"{what} {when}".strip())
@@ -92,6 +97,7 @@ def list_activities(
             limit=limit,
             emit=emit,
             noun="activity",
+            json_key="activities",
             plural="activities",
             spinner=f"Walking the {kind} feed",
         )

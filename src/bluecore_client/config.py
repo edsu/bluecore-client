@@ -82,12 +82,25 @@ def resolve(
 
     env = os.environ.get
 
-    bluecore_url = bluecore_url or env("BLUECORE_URL") or DEFAULT_BLUECORE_URL
+    def derive(argument: str | None, variable: str, suffix: str) -> str:
+        """Resolve one URL, keeping arguments ahead of the environment.
 
-    resolved_api = api_url or env("API_URL") or _join(bluecore_url, "api")
-    resolved_keycloak = (
-        keycloak_url or env("KEYCLOAK_EXTERNAL_URL") or _join(bluecore_url, "keycloak")
-    )
+        An explicitly passed ``bluecore_url`` has to beat ``API_URL`` from the
+        environment, not lose to it -- otherwise asking for one deployment
+        quietly reads from another. That matters most for ``load profiles``,
+        whose whole job is copying between two instances.
+        """
+        if argument:
+            return argument
+        if bluecore_url:
+            return _join(bluecore_url, suffix)
+        from_environment = env(variable)
+        if from_environment:
+            return from_environment
+        return _join(env("BLUECORE_URL") or DEFAULT_BLUECORE_URL, suffix)
+
+    resolved_api = derive(api_url, "API_URL", "api")
+    resolved_keycloak = derive(keycloak_url, "KEYCLOAK_EXTERNAL_URL", "keycloak")
 
     return Config(
         api_url=resolved_api.rstrip("/"),

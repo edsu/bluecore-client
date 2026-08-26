@@ -62,9 +62,10 @@ def stream(
         return
 
     wanted = None if all else limit
-    # Without --all the page size already equals the limit, so there's no
-    # reason to ask for another page.
-    sources: Iterator[Page] = _chain(first, page_iter) if all else iter((first,))
+    # Always chain. Page iteration is lazy, so reaching the limit inside the
+    # first page costs no extra request -- but a --limit above the page cap
+    # still gets everything it asked for instead of being silently truncated.
+    sources: Iterator[Page] = _chain(first, page_iter)
 
     if settings.output.is_rdf:
         _emit_rdf(first, sources, wanted, noun, plural)
@@ -93,6 +94,7 @@ def stream_items(
     limit: int,
     emit: Callable[[dict[str, Any]], None],
     noun: str,
+    json_key: str,
     spinner: str,
     plural: str | None = None,
 ) -> None:
@@ -117,7 +119,7 @@ def stream_items(
         first = next(items, None)
 
     if first is None:
-        _report_empty(noun, noun if plural is None else plural, plural)
+        _report_empty(noun, json_key, plural)
         return
 
     for item in _chain(first, items):
@@ -130,7 +132,9 @@ def stream_items(
             break
 
     if settings.wants_document:
-        ui.emit_json(collected)
+        # The same envelope stream() uses, so a script doesn't need to know
+        # which kind of collection it asked for.
+        ui.emit_json({"total": len(collected), json_key: collected})
         return
 
     ui.note(ui.count(shown, noun, plural))
@@ -178,7 +182,7 @@ def _collect(sources: Iterator[Page], wanted: int | None) -> list[dict[str, Any]
         items.extend(page.items)
         if wanted is not None and len(items) >= wanted:
             break
-    return items[:wanted] if wanted else items
+    return items[:wanted] if wanted is not None else items
 
 
 def _emit_json(

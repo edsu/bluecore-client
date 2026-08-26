@@ -384,14 +384,20 @@ class TestSearch:
 
     def test_search_json_includes_the_total(self, httpx_mock, token_response):
         token_response()
+        # A full page, so the limit is satisfied without a second request.
         httpx_mock.add_response(
             url=f"{API_URL}/search/?q=emma&type=all&limit=20&offset=0",
-            json={"results": [{"uuid": "w1"}], "total": 42},
+            json={
+                "results": [{"uuid": f"w{n}"} for n in range(20)],
+                "total": 42,
+            },
         )
 
         result = runner.invoke(app, [*GLOBAL_OPTIONS, "-o", "json", "search", "emma"])
 
-        assert json.loads(result.stdout)["total"] == 42
+        payload = json.loads(result.stdout)
+        assert payload["total"] == 42
+        assert len(payload["results"]) == 20
 
     def test_search_notes_when_it_is_showing_a_subset(self, httpx_mock, token_response):
         token_response()

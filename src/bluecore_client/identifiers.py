@@ -43,6 +43,14 @@ def extract_uuid(value: str, *, expected: str | None = None) -> str:
     identifier = segments[-1]
     kind = segments[-2] if len(segments) > 1 else None
 
+    # A collection URI names a type where an identifier should be, which would
+    # otherwise be requested as /works/works and 404 confusingly.
+    if identifier in RESOURCE_SEGMENTS:
+        raise BluecoreError(
+            f"{value} is a collection, not a single {_singular(identifier)}. "
+            f"Add an identifier, or search instead."
+        )
+
     if expected and kind in RESOURCE_SEGMENTS and kind != expected:
         raise BluecoreError(
             f"{value} points at {kind}, not {expected}. "

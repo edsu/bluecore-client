@@ -104,8 +104,12 @@ def load_profiles(
         return
 
     for profile in incoming:
+        data = profile.get("data")
+        if data is None:
+            ui.failure(f"{profile.get('uri', '')}: no profile data to copy")
+            continue
         try:
-            created = target.profiles.create(profile["data"])
+            created = target.profiles.create(data)
         except BluecoreError as error:
             ui.failure(f"{profile.get('uri', '')}: {error}")
             continue

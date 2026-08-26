@@ -63,6 +63,7 @@ def test_other_errors_keep_the_status_and_response(httpx_mock, client):
 
     assert caught.value.status_code == 503
     assert "Airflow is unavailable" in str(caught.value)
+    assert caught.value.response is not None
     assert caught.value.response.status_code == 503
 
 

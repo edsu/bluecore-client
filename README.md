@@ -1,5 +1,7 @@
 # Blue Core Client
 
+[![Test](https://github.com/edsu/bluecore-client/actions/workflows/test.yml/badge.svg)](https://github.com/edsu/bluecore-client/actions/workflows/test.yml)
+
 A command line tool and Python library for the [Blue Core API].
 
 Blue Core describes library resources using [BIBFRAME], which is RDF. You don't

@@ -152,8 +152,12 @@ def _describe(response: httpx.Response, grant_type: str | None) -> str:
     """Turn a Keycloak error response into something worth reading."""
     try:
         body = response.json()
-        detail = body.get("error_description") or body.get("error") or ""
     except ValueError:
+        body = None
+
+    if isinstance(body, dict):
+        detail = str(body.get("error_description") or body.get("error") or "")
+    else:
         detail = response.text.strip()
 
     hint = ""
