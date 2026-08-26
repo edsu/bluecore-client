@@ -70,8 +70,19 @@ class Output(StrEnum):
 
     @property
     def is_rdf(self) -> bool:
-        """Whether this needs converting to another RDF serialization."""
+        """Whether this needs converting to a non-JSON RDF serialization."""
         return self in (Output.TURTLE, Output.RDFXML, Output.NTRIPLES)
+
+    @property
+    def emits_graph(self) -> bool:
+        """Whether a collection should come out as one merged RDF graph.
+
+        JSON-LD belongs here alongside turtle and the rest: they are the same
+        graph in different syntaxes, and a graph is what can be loaded back in.
+        ``json`` stays the API's own envelope, for scripts that want ``total``
+        and the per-record metadata.
+        """
+        return self.is_rdf or self is Output.JSONLD
 
     @property
     def is_document(self) -> bool:

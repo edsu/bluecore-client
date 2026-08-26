@@ -119,6 +119,7 @@ def pause() -> Iterator[None]:
 #: to Tera Term macro and "nt" to NestedText, neither of which is RDF. There is
 #: no N-Triples lexer, but Turtle is a superset of it and reads correctly.
 LEXERS = {
+    "jsonld": "json",
     "turtle": "turtle",
     "ntriples": "turtle",
     "rdfxml": "xml",

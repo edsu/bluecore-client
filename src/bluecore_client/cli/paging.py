@@ -67,7 +67,7 @@ def stream(
     # still gets everything it asked for instead of being silently truncated.
     sources: Iterator[Page] = _chain(first, page_iter)
 
-    if settings.output.is_rdf:
+    if settings.output.emits_graph:
         _emit_rdf(first, sources, wanted, noun, plural)
         return
 

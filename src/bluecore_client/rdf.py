@@ -29,6 +29,7 @@ SERIALIZERS = {
     # lossless here, so the choice is about consistency and quiet.
     "rdfxml": "xml",
     "ntriples": "nt",
+    "jsonld": "json-ld",
 }
 
 #: Prefixes bound so turtle and RDF/XML come out readable, matching the ones
@@ -86,7 +87,14 @@ def serialize(
             f"Choose from: {', '.join(sorted(SERIALIZERS))}"
         ) from None
 
-    return to_graph(documents, context=context).serialize(format=serializer)
+    graph = to_graph(documents, context=context)
+
+    if serializer == "json-ld" and context:
+        # Compacted against the deployment's own context, so the output looks
+        # like what the API serves rather than fully expanded JSON-LD.
+        return graph.serialize(format="json-ld", context=context, auto_compact=True)
+
+    return graph.serialize(format=serializer)
 
 
 def _with_context(

@@ -43,14 +43,20 @@ def load_file(
             dir_okay=False,
             readable=True,
             resolve_path=True,
-            help="RDF file, or a .zip / .tar.gz archive of them",
+            help="RDF file (JSON-LD, turtle, RDF/XML, N-Triples) or an archive",
         ),
     ],
 ) -> None:
     """Upload a file to load.
 
-    Accepts a single RDF file (JSON-LD or RDF/XML), or an archive of them which
-    is bulk loaded by the archived_file_loader workflow.
+    Accepts any RDF serialization -- JSON-LD, turtle, RDF/XML, N-Triples -- or a
+    .zip / .tar.gz archive of them. Anything that isn't already JSON-LD is
+    converted first, since the loading workflow only reads JSON-LD.
+
+    So output redirected from this tool can be fed straight back in:
+
+        bluecore -o turtle search moon --all > moon.ttl
+        bluecore load file moon.ttl
     """
     try:
         target = client(require_auth=True)

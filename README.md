@@ -86,6 +86,7 @@ bluecore work delete <uuid-or-uri>
 
 # Load in bulk
 bluecore load url https://example.org/records.jsonld
+bluecore load file records.ttl        # converted to JSON-LD before upload
 bluecore load file records.zip
 bluecore load profiles
 
@@ -140,7 +141,8 @@ $ bluecore --timeout 10 search moon
 | `-o` | What you get |
 |---|---|
 | *(default)* | Human-readable: one record per line, or pretty JSON-LD for a single resource |
-| `json`, `jsonld` | A JSON document |
+| `json` | The API's own response, with `total` and per-record metadata |
+| `jsonld` | The records as one merged JSON-LD graph |
 | `turtle` | Turtle |
 | `rdfxml` | RDF/XML |
 | `ntriples` | N-Triples |
@@ -156,8 +158,37 @@ bluecore -o ntriples search moon --type instances
 For a single resource the API does the serializing, so you get the deployment's
 own output. For a result set the API only offers JSON-LD, so the client merges
 the results into one graph and serializes that -- which means those can't
-stream, unlike the default output. Change feeds have no RDF form, since they're
-Activity Streams rather than BIBFRAME, and asking for one says so.
+stream, unlike the default output. Change feeds are Activity Streams rather
+than BIBFRAME, so `-o jsonld` leaves them as they are and the other RDF
+serializations are refused.
+
+`json` and `jsonld` differ on purpose: `json` is the API's response as it came,
+with `total` and each record's `uri`, `uuid` and timestamps, which is what you
+want for scripting. `jsonld` is the RDF those records describe, merged into one
+graph -- the same graph as `turtle`, just in a different syntax.
+
+### Round tripping
+
+Because `jsonld` is a graph rather than an envelope, anything you save can be
+loaded back:
+
+```shell
+bluecore -o turtle search moon --all > moon.ttl
+bluecore load file moon.ttl
+```
+
+`load file` takes JSON-LD, turtle, RDF/XML or N-Triples. The loading workflow
+only reads JSON-LD, so anything else is converted before it is sent -- without
+that, the upload would be accepted and then fail inside Airflow, long after the
+command had reported success. Pass nothing special; it just works. Archives
+(`.zip`, `.tar.gz`) are sent untouched, since a different workflow unpacks them.
+
+The same applies to a single resource:
+
+```shell
+bluecore -o jsonld work view <uuid> > work.jsonld
+bluecore work update <uuid> work.jsonld
+```
 
 Data goes to stdout and status messages to stderr, so `-o turtle ... > out.ttl`
 gives you a clean file. Colour switches off automatically when output is piped,
@@ -375,7 +406,9 @@ waiting for the load to finish:
 
 ```python
 client.batches.from_url("https://example.org/records.jsonld")
+client.batches.upload("records.ttl")              # converted to JSON-LD first
 client.batches.upload("records.zip")
+client.batches.upload("odd.txt", convert=False)   # send the bytes as they are
 ```
 
 ## Errors
