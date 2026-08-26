@@ -60,10 +60,16 @@ class Settings:
 
         if not resolved.can_authenticate():
             if require_auth:
-                username = username or typer.prompt("Blue Core username")
-                password = password or typer.prompt(
-                    "Blue Core password", hide_input=True
-                )
+                from bluecore_client.cli import ui
+
+                # Any spinner has to come down first, or it redraws over the
+                # prompt and over what's being typed.
+                with ui.pause():
+                    ui.note(f"Sign in to {resolved.api_url}")
+                    username = username or typer.prompt("Blue Core username")
+                    password = password or typer.prompt(
+                        "Blue Core password", hide_input=True
+                    )
             else:
                 anonymous = True
 

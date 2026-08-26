@@ -1,8 +1,7 @@
 """Loading data in bulk.
 
-These replace ``load-url`` and ``load-file`` from the CLI in bluecore_api.
-Loading is asynchronous -- the API hands the work to Airflow and returns a
-workflow id -- so a success here means "accepted", not "loaded".
+Loading is asynchronous, the API hands the work to Airflow and returns a
+workflow id, so a success here means "accepted", not "loaded".
 """
 
 from __future__ import annotations
@@ -25,8 +24,9 @@ def load_url(
 ) -> None:
     """Load a JSON-LD document from a URL."""
     try:
+        target = client(require_auth=True)
         with ui.working(f"Submitting {url}"):
-            result = client(require_auth=True).batches.from_url(url)
+            result = target.batches.from_url(url)
     except BluecoreError as error:
         die(error)
         return
@@ -53,8 +53,9 @@ def load_file(
     is bulk loaded by the archived_file_loader workflow.
     """
     try:
+        target = client(require_auth=True)
         with ui.working(f"Uploading {file.name}"):
-            result = client(require_auth=True).batches.upload(file)
+            result = target.batches.upload(file)
     except BluecoreError as error:
         die(error)
         return

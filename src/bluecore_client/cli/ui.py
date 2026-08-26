@@ -67,17 +67,51 @@ def note(message: str) -> None:
     err.print(f"[muted]{message}[/muted]")
 
 
+#: The spinner currently on screen, if any. Tracked so that anything needing
+#: the terminal can stand it down first -- a spinner redrawing over a prompt
+#: hides both the question and what you type.
+_active_status: Any = None
+
+
 @contextmanager
 def working(message: str) -> Iterator[None]:
     """Show a spinner while something slow happens.
 
     Silent when stderr isn't a terminal, so logs stay readable.
     """
+    global _active_status
+
     if not err.is_terminal:
         yield
         return
-    with err.status(f"[muted]{message}[/muted]", spinner="dots"):
+
+    status = err.status(f"[muted]{message}[/muted]", spinner="dots")
+    previous = _active_status
+    _active_status = status
+    try:
+        with status:
+            yield
+    finally:
+        _active_status = previous
+
+
+@contextmanager
+def pause() -> Iterator[None]:
+    """Stop the spinner while the terminal is needed for something else.
+
+    Used around credential prompts: without this the spinner overwrites the
+    prompt and the characters being typed.
+    """
+    status = _active_status
+    if status is None:
         yield
+        return
+
+    status.stop()
+    try:
+        yield
+    finally:
+        status.start()
 
 
 def emit_json(data: Any) -> None:

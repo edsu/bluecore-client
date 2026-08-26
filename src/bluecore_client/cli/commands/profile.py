@@ -73,8 +73,9 @@ def create(
         return
 
     try:
+        target = client(require_auth=True)
         with ui.working("Creating profile"):
-            created = client(require_auth=True).profiles.create(data)
+            created = target.profiles.create(data)
     except BluecoreError as error:
         die(error)
         return
@@ -97,8 +98,9 @@ def delete(
         typer.confirm(f"Delete profile {uuid}?", abort=True)
 
     try:
+        target = client(require_auth=True)
         with ui.working(f"Deleting profile {uuid}"):
-            client(require_auth=True).profiles.delete(uuid)
+            target.profiles.delete(uuid)
     except BluecoreError as error:
         die(error)
         return

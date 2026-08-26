@@ -40,8 +40,9 @@ def register(app: typer.Typer) -> None:
     ) -> None:
         """Export an Instance to a Library Services Platform."""
         try:
+            connection = client(require_auth=True)
             with ui.working(f"Exporting {instance_uri}"):
-                result = client(require_auth=True).export(instance_uri, local_id)
+                result = connection.export(instance_uri, local_id)
         except BluecoreError as error:
             die(error)
             return
@@ -97,8 +98,9 @@ def to_bibframe(
     Nothing is stored, so this is a safe way to see what a record becomes.
     """
     try:
+        connection = client(require_auth=True)
         with ui.working(f"Converting {file.name}"):
-            result = client(require_auth=True).convert.marc_to_bibframe(file)
+            result = connection.convert.marc_to_bibframe(file)
     except BluecoreError as error:
         die(error)
         return
@@ -115,8 +117,9 @@ def to_marcxml(
 ) -> None:
     """Convert binary MARC to MARCXML."""
     try:
+        connection = client(require_auth=True)
         with ui.working(f"Converting {file.name}"):
-            result = client(require_auth=True).convert.marc_to_xml(file)
+            result = connection.convert.marc_to_xml(file)
     except BluecoreError as error:
         die(error)
         return

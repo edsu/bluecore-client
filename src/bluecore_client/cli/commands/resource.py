@@ -74,8 +74,11 @@ def build(noun: str, attribute: str) -> typer.Typer:
             return
 
         try:
+            # Signing in happens before the spinner starts, so a prompt
+            # never competes with it for the terminal.
+            target = endpoint(require_auth=True)
             with ui.working(f"Creating {noun}"):
-                result = endpoint(require_auth=True).create(graph)
+                result = target.create(graph)
         except BluecoreError as error:
             die(error)
             return
@@ -104,8 +107,9 @@ def build(noun: str, attribute: str) -> typer.Typer:
             return
 
         try:
+            target = endpoint(require_auth=True)
             with ui.working(f"Updating {noun} {uuid}"):
-                result = endpoint(require_auth=True).update(uuid, graph)
+                result = target.update(uuid, graph)
         except BluecoreError as error:
             die(error)
             return
@@ -128,8 +132,9 @@ def build(noun: str, attribute: str) -> typer.Typer:
             typer.confirm(f"Delete {noun} {uuid}?", abort=True)
 
         try:
+            target = endpoint(require_auth=True)
             with ui.working(f"Deleting {noun} {uuid}"):
-                endpoint(require_auth=True).delete(uuid)
+                target.delete(uuid)
         except BluecoreError as error:
             die(error)
             return
