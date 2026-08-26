@@ -1,0 +1,110 @@
+"""Exceptions raised by the Blue Core client.
+
+Every error carries the API's own ``detail`` message where it sent one, since
+that is usually more useful than the status code alone.
+"""
+
+from __future__ import annotations
+
+import httpx
+
+
+class BluecoreError(Exception):
+    """Base class for every error this library raises."""
+
+
+class ConfigError(BluecoreError):
+    """Something needed to reach Blue Core is missing or unusable."""
+
+
+class AuthError(BluecoreError):
+    """Keycloak refused the credentials, or the API refused the token."""
+
+
+class ConnectionFailed(BluecoreError):
+    """The API could not be reached at all: refused, unresolved, or timed out."""
+
+
+class APIError(BluecoreError):
+    """The API returned an unsuccessful status code."""
+
+    def __init__(self, message: str, *, status_code: int, response: httpx.Response):
+        super().__init__(message)
+        self.status_code = status_code
+        self.response = response
+
+
+class NotFound(APIError):
+    """The requested resource does not exist."""
+
+
+class ValidationError(APIError):
+    """The API rejected the request body or parameters."""
+
+
+class PermissionDenied(APIError):
+    """The token is valid but lacks the role this operation requires."""
+
+
+def _detail(response: httpx.Response) -> str:
+    """Pull FastAPI's ``detail`` out of an error response, readably.
+
+    ``detail`` is a plain string for HTTPException, but a list of per-field
+    dicts for a 422 from Pydantic validation, so both shapes are handled.
+    """
+    try:
+        detail = response.json().get("detail")
+    except ValueError:
+        detail = None
+
+    if detail is None:
+        return response.text.strip() or response.reason_phrase
+
+    if isinstance(detail, str):
+        return detail
+
+    if isinstance(detail, list):
+        parts = []
+        for item in detail:
+            if isinstance(item, dict):
+                location = ".".join(str(p) for p in item.get("loc", ()))
+                message = item.get("msg", "invalid")
+                parts.append(f"{location}: {message}" if location else message)
+            else:
+                parts.append(str(item))
+        return "; ".join(parts)
+
+    return str(detail)
+
+
+def raise_for_status(response: httpx.Response) -> None:
+    """Raise the most specific error that fits ``response``."""
+    if not response.is_error:
+        return
+
+    message = _detail(response)
+    status = response.status_code
+    request = response.request
+
+    if status == 404:
+        raise NotFound(
+            f"{message} ({request.method} {request.url})",
+            status_code=status,
+            response=response,
+        )
+    if status == 401:
+        raise AuthError(f"{message} ({request.method} {request.url})")
+    if status == 403:
+        raise PermissionDenied(
+            f"{message} ({request.method} {request.url})",
+            status_code=status,
+            response=response,
+        )
+    if status == 422:
+        raise ValidationError(message, status_code=status, response=response)
+
+    raise APIError(
+        f"{status} {message} ({request.method} {request.url})",
+        status_code=status,
+        response=response,
+    )
