@@ -4,8 +4,8 @@
 
 A command line tool and Python library for the [Blue Core API].
 
-Blue Core describes library resources using [BIBFRAME], which is RDF. You don't
-need to know that. This client deals in plain JSON.
+Blue Core describes library resources using [BIBFRAME]. Reads return JSON-LD as
+plain Python dictionaries; turtle, RDF/XML and N-Triples are available too.
 
 ## Install
 
@@ -241,9 +241,8 @@ titles = titles if isinstance(titles, list) else [titles]
 titles[0]["mainTitle"]  # 'Le mal joli'
 ```
 
-That is more ceremony than it should be, and smoothing it out -- both in the
-API's JSON-LD and behind a friendlier accessor here -- is the next thing on the
-list. Until then, it's worth knowing about rather than being surprised by.
+Making the JSON-LD more predictable is
+[bluecore_api#297](https://github.com/blue-core-lod/bluecore_api/issues/297).
 
 ## Connecting
 

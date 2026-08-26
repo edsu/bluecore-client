@@ -48,7 +48,7 @@ def test_search_returns_results(live):
 
 
 def test_search_results_look_like_json(live):
-    """The whole point: what comes back should be usable as plain JSON."""
+    """Results come back as ordinary dictionaries."""
     page = live.search("", limit=1).first()
     if not page.items:
         pytest.skip("no data loaded in this deployment")

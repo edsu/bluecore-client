@@ -47,8 +47,7 @@ class BluecoreClient:
         client = BluecoreClient()
         work = client.works.get(uuid)
 
-    ``work`` is a plain dictionary of JSON-LD. Nothing here requires you to
-    know or care that it started life as RDF.
+    ``work`` is a plain dictionary of JSON-LD.
 
     Settings can also be passed directly::
 

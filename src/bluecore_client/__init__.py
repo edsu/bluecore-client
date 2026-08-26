@@ -1,7 +1,7 @@
 """A Python client for the Blue Core API.
 
-Blue Core describes library resources using BIBFRAME, which is RDF. You don't
-need to know that: this client hands back plain JSON dictionaries.
+Reads return JSON-LD as plain dictionaries. Other RDF serializations are
+available on request.
 
     >>> from bluecore_client import BluecoreClient
     >>> client = BluecoreClient()
