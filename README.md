@@ -1,6 +1,7 @@
 # Blue Core Client
 
-[![Test](https://github.com/edsu/bluecore-client/actions/workflows/test.yml/badge.svg)](https://github.com/edsu/bluecore-client/actions/workflows/test.yml)
+[![Test](https://github.com/blue-core-lod/bluecore-client/actions/workflows/test.yml/badge.svg)](https://github.com/blue-core-lod/bluecore-client/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/bluecore-client)](https://pypi.org/project/bluecore-client/)
 
 A command line tool and Python library for the [Blue Core API].
 
@@ -9,16 +10,15 @@ plain Python dictionaries; turtle, RDF/XML and N-Triples are available too.
 
 ## Install
 
-Not yet published, so install from the repository:
-
 ```shell
-pip install git+https://github.com/blue-core-lod/bluecore-client
+pip install bluecore-client
 ```
 
-Or, with [uv], to get the `bluecore` command without installing into a project:
+Or, with [uv], to get the `bluecore` command on its own without installing into
+a project:
 
 ```shell
-uv tool install git+https://github.com/blue-core-lod/bluecore-client
+uv tool install bluecore-client
 ```
 
 ## Try it
