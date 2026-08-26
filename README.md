@@ -406,9 +406,9 @@ waiting for the load to finish:
 
 ```python
 client.batches.from_url("https://example.org/records.jsonld")
-client.batches.upload("records.ttl")              # converted to JSON-LD first
+client.batches.upload("records.ttl")  # converted to JSON-LD first
 client.batches.upload("records.zip")
-client.batches.upload("odd.txt", convert=False)   # send the bytes as they are
+client.batches.upload("odd.txt", convert=False)  # send the bytes as they are
 ```
 
 ## Errors
