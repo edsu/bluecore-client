@@ -171,7 +171,7 @@ def _emit_rdf(
             graphs, str(settings.output), context=settings.client().context()
         )
 
-    print(body, end="" if body.endswith("\n") else "\n")
+    ui.emit_code(body, ui.LEXERS.get(str(settings.output), "text"))
     ui.note(ui.count(len(graphs), noun, plural))
 
 

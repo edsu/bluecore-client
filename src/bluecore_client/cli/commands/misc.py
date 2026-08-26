@@ -124,4 +124,4 @@ def to_marcxml(
         die(error)
         return
 
-    print(result)
+    ui.emit_code(result, "xml")

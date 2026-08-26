@@ -17,6 +17,7 @@ from typing import Any
 
 from rich.console import Console
 from rich.markup import escape
+from rich.syntax import Syntax
 from rich.theme import Theme
 
 THEME = Theme(
@@ -114,9 +115,47 @@ def pause() -> Iterator[None]:
         status.start()
 
 
+#: Pygments lexer per output name. Note the exact names matter: "ttl" resolves
+#: to Tera Term macro and "nt" to NestedText, neither of which is RDF. There is
+#: no N-Triples lexer, but Turtle is a superset of it and reads correctly.
+LEXERS = {
+    "turtle": "turtle",
+    "ntriples": "turtle",
+    "rdfxml": "xml",
+    "marcxml": "xml",
+}
+
+#: Token colours are drawn from the terminal's own ANSI palette rather than a
+#: fixed scheme, so output suits whatever theme the user already runs.
+SYNTAX_THEME = "ansi_dark"
+
+
 def emit_json(data: Any) -> None:
-    """Print machine-readable JSON, unstyled and unwrapped."""
-    print(json.dumps(data, indent=2, ensure_ascii=False))
+    """Print JSON, highlighted on a terminal and verbatim when redirected."""
+    body = json.dumps(data, indent=2, ensure_ascii=False)
+    emit_code(body, "json")
+
+
+def emit_code(text: str, lexer: str) -> None:
+    """Print source text, highlighted only when someone is looking at it.
+
+    Redirected output has to stay byte for byte what the API produced -- an
+    escape sequence in a saved .ttl file would make it unparseable -- so
+    highlighting is applied only when stdout is a terminal.
+    """
+    if not out.is_terminal:
+        print(text, end="" if text.endswith("\n") else "\n")
+        return
+
+    out.print(
+        Syntax(
+            text,
+            lexer,
+            theme=SYNTAX_THEME,
+            background_color="default",
+            word_wrap=True,
+        )
+    )
 
 
 def emit(data: Any, *, as_json: bool) -> None:

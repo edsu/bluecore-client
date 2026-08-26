@@ -23,7 +23,11 @@ from bluecore_client.errors import BluecoreError
 #: Output name -> the serializer name rdflib knows it by.
 SERIALIZERS = {
     "turtle": "turtle",
-    "rdfxml": "pretty-xml",
+    # "xml" rather than "pretty-xml": it is what the API's own as_rdfxml uses,
+    # so a single resource and a result set come out in the same flavour, and
+    # it doesn't emit rdflib's "assertions ... are ignored" warnings. Both are
+    # lossless here, so the choice is about consistency and quiet.
+    "rdfxml": "xml",
     "ntriples": "nt",
 }
 

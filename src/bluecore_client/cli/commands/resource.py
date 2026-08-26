@@ -51,7 +51,7 @@ def build(noun: str, attribute: str) -> typer.Typer:
             return
 
         if isinstance(result, str):
-            print(result, end="" if result.endswith("\n") else "\n")
+            ui.emit_code(result, ui.LEXERS.get(str(settings.output), "text"))
         else:
             ui.emit(result, as_json=settings.wants_document)
 
