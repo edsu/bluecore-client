@@ -50,14 +50,6 @@ bluecore work view 4403fbce-ba01-5a4e-a8fc-03fc71caf56d
 bluecore work view https://dev.bcld.info/works/d18a81bf-42ac-4ee5-b71b-b9de61833c62
 ```
 
-Hand a URI to the wrong command and it says so rather than returning a
-confusing 404:
-
-```
-✗ https://dev.bcld.info/instances/abc points at instances, not
-  works. Try the instance command instead.
-```
-
 ## Command line
 
 ```shell
@@ -157,7 +149,7 @@ bluecore -o ntriples search moon --type instances
 
 For a single resource the API does the serializing, so you get the deployment's
 own output. For a result set the API only offers JSON-LD, so the client merges
-the results into one graph and serializes that -- which means those can't
+the results into one graph and serializes that, which can't
 stream, unlike the default output. Change feeds are Activity Streams rather
 than BIBFRAME, so `-o jsonld` leaves them as they are and the other RDF
 serializations are refused.
@@ -165,7 +157,7 @@ serializations are refused.
 `json` and `jsonld` differ on purpose: `json` is the API's response as it came,
 with `total` and each record's `uri`, `uuid` and timestamps, which is what you
 want for scripting. `jsonld` is the RDF those records describe, merged into one
-graph -- the same graph as `turtle`, just in a different syntax.
+graph, which is the same graph as `turtle`, just in a different syntax.
 
 ### Round tripping
 
@@ -178,10 +170,7 @@ bluecore load file moon.ttl
 ```
 
 `load file` takes JSON-LD, turtle, RDF/XML or N-Triples. The loading workflow
-only reads JSON-LD, so anything else is converted before it is sent -- without
-that, the upload would be accepted and then fail inside Airflow, long after the
-command had reported success. Pass nothing special; it just works. Archives
-(`.zip`, `.tar.gz`) are sent untouched, since a different workflow unpacks them.
+only reads JSON-LD, so anything else is converted before it is sent.
 
 The same applies to a single resource:
 
@@ -191,8 +180,7 @@ bluecore work update <uuid> work.jsonld
 ```
 
 Data goes to stdout and status messages to stderr, so `-o turtle ... > out.ttl`
-gives you a clean file. Colour switches off automatically when output is piped,
-and honours `NO_COLOR`.
+gives you a clean file.
 
 `bluecore token` prints an access token and nothing else, so it can be captured
 directly:
@@ -207,8 +195,8 @@ Run `bluecore --help`, or `bluecore <command> --help`, for the rest.
 ## Credentials
 
 Reading is anonymous, so `search`, `view`, and `list` need nothing configured.
-Anything that writes -- `create`, `update`, `delete`, `load`, `export`,
-`convert`, and `token` -- does need credentials, and will prompt for them if it
+Anything that writes, such as `create`, `update`, `delete`, `load`, `export`,
+`convert`, and `token`, do need credentials, and will prompt for them if it
 can't find any. Point it at another deployment the same way:
 
 ```shell
@@ -244,8 +232,8 @@ bluecore --api-url http://localhost:3000 \
 
 # Using it as a library
 
-Everything the CLI does is available in Python, and it's meant to be pleasant
-in a notebook.
+Everything the CLI does is available in Python, and it's meant to be useful 
+in a Jupyter notebook.
 
 ```python
 from bluecore_client import BluecoreClient
@@ -264,22 +252,6 @@ As on the command line, a URI works anywhere a UUID does:
 ```python
 client.works.get("https://dev.bcld.info/works/4403fbce-...")
 ```
-
-### One rough edge, up front
-
-JSON-LD makes a field a list only when it holds more than one value, so the
-same field can be a dict on one record and a list on the next. BIBFRAME also
-nests the title rather than giving you a string. Together that means reading a
-title looks like this:
-
-```python
-titles = work["title"]
-titles = titles if isinstance(titles, list) else [titles]
-titles[0]["mainTitle"]  # 'Le mal joli'
-```
-
-Making the JSON-LD more predictable is
-[bluecore_api#297](https://github.com/blue-core-lod/bluecore_api/issues/297).
 
 ## Connecting
 
