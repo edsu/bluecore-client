@@ -211,8 +211,6 @@ the directory you're working in:
 | `BLUECORE_URL` | Root of the deployment; the API and Keycloak are derived from it |
 | `API_KEYCLOAK_USER` | Username |
 | `API_KEYCLOAK_PASSWORD` | Password |
-| `API_URL` | The API directly, when it isn't at `BLUECORE_URL/api` |
-| `KEYCLOAK_EXTERNAL_URL` | Keycloak directly, when it isn't at `BLUECORE_URL/keycloak` |
 | `BLUECORE_TOKEN` | An access token, instead of logging in |
 
 Setting `API_KEYCLOAK_USER` and `API_KEYCLOAK_PASSWORD` is enough to stop the
@@ -221,8 +219,19 @@ environment variable takes precedence over a `.env` entry, and either can be
 overridden per command with `--username` and `--password`.
 
 These are the same names [Blue Core API] uses, so an existing `.env` works
-as-is. For a local development server, which serves the API at the bare root
-rather than under `/api`:
+as-is.
+
+`BLUECORE_URL` is usually all you need. Two more variables exist for
+deployments that don't put the API and Keycloak where it would derive them:
+
+| Variable | What it's for |
+|---|---|
+| `API_URL` | The API directly, when it isn't at `BLUECORE_URL/api` |
+| `KEYCLOAK_EXTERNAL_URL` | Keycloak directly, when it isn't at `BLUECORE_URL/keycloak` |
+
+If one of these is set alongside `BLUECORE_URL` it wins for that service, and
+`BLUECORE_URL` still supplies the other. A local development server needs both,
+since it serves the API at the bare root rather than under `/api`:
 
 ```shell
 bluecore --api-url http://localhost:3000 \
